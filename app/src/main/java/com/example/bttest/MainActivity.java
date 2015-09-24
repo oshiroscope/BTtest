@@ -1,10 +1,10 @@
 package com.example.bttest;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,9 +12,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import org.w3c.dom.Text;
-
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private BtClientConnection connection;
 
     private TextView textView;
+    private Handler guiHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
         }else{
             connectServer();
         }
+
+        guiHandler = new Handler();
     }
 
     @Override
@@ -75,11 +75,20 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("LOG", "Devices:" + device.getName() + "/" + device.getAddress() + "/" + device.getBondState());
                 selected = device;
             }
-            connection = new BtClientConnection(selected, textView);
+            connection = new BtClientConnection(selected, textView, guiHandler);
             connection.start();
         }else{
             Toast.makeText(this, "端末がありません", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public void setTextAsync(final String text){
+        guiHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(text);
+            }
+        });
     }
 
     @Override

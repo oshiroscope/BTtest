@@ -2,6 +2,8 @@ package com.example.bttest;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -14,7 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by 啓介 on 2015/09/24.
+ * Created by Keisuke Shiro on 2015/09/24.
  */
 public class BtClientConnection extends Thread{
     private final BluetoothSocket mSocket;
@@ -23,12 +25,13 @@ public class BtClientConnection extends Thread{
     private final InputStream mInput;
     private final OutputStream mOutput;
 
-    private TextView mTextView;
-
     private enum State{CONNECT, CONNECTED, DISCONNECT}
     private State mState;
 
-    public BtClientConnection(BluetoothDevice device, TextView textView){
+    private TextView mTextView;
+    private Handler mHandler;
+
+    public BtClientConnection(BluetoothDevice device, TextView textView, Handler handler){
         mDevice = device;
         BluetoothSocket socket = null;
         InputStream in = null;
@@ -48,7 +51,7 @@ public class BtClientConnection extends Thread{
         mState = State.CONNECT;
 
         mTextView = textView;
-        mTextView.setText("Start");
+        mHandler = handler;
     }
 
     public void run(){
@@ -75,11 +78,14 @@ public class BtClientConnection extends Thread{
                     try {
                         bytes = mInput.read(buffer);
                         if(bytes != 0){
-                            //DataInputStream in = new DataInputStream(new ByteArrayInputStream(buffer));
-                            //float val = in.readFloat();
-                            //Log.d("LOG", "byte :" + buffer[0] + " " + buffer[1] + " " + buffer[2] + " " + buffer[3]+ " " + buffer[4]+ " " + buffer[5]+ " " + buffer[6] + " " + buffer[7]);
                             Log.d("LOG", "data :" + buffer[0]);
-                            mTextView.setText(String.valueOf(buffer[0]));
+                            final String text = String.valueOf(buffer[0]);
+                            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mTextView.setText(text);
+                                }
+                            });
                         }
                     }catch (Exception e){
                         e.printStackTrace();
